@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema attributeFormDefault="unqualified"
+        elementFormDefault="qualified"
+        targetNamespace="http://xmlns.oracle.com/pcbpel/adapter/jms/types"
+        xmlns:tns="http://xmlns.oracle.com/pcbpel/adapter/jms/types"
+        xmlns="http://www.w3.org/2001/XMLSchema">
+
+    <!-- Loan Application Request -->
+    <element name="LoanRequest">
+        <complexType>
+            <sequence>
+                <element name="transactionId" type="string"/>
+                <element name="ssn" type="string"/>
+                <element name="applicantName" type="string"/>
+                <element name="requestedAmount" type="double"/>
+                <element name="monthlyIncome" type="double"/>
+            </sequence>
+        </complexType>
+    </element>
+
+    <!-- Credit Check Request -->
+    <element name="CreditRequest">
+        <complexType>
+            <sequence>
+                <element name="transactionId" type="string"/>
+                <element name="ssn" type="string"/>
+                <element name="monthlyIncome" type="double"/>
+            </sequence>
+        </complexType>
+    </element>
+
+    <!-- Credit Check Response -->
+    <element name="CreditResponse">
+        <complexType>
+            <sequence>
+                <element name="transactionId" type="string"/>
+                <element name="creditScore" type="int"/>
+                <element name="riskRating" type="string"/>
+            </sequence>
+        </complexType>
+    </element>
+
+    <!-- Final Loan Application Response -->
+    <element name="LoanResponse">
+        <complexType>
+            <sequence>
+                <element name="transactionId" type="string"/>
+                <element name="applicantName" type="string"/>
+                <element name="status" type="string"/>
+                <element name="interestRate" type="double"/>
+                <element name="maxApprovedLimit" type="double"/>
+                <element name="remarks" type="string"/>
+            </sequence>
+        </complexType>
+    </element>
+
+</schema>

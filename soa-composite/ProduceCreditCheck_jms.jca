@@ -1,0 +1,10 @@
+<adapter-config name="ProduceCreditCheck" adapter="jms" wsdlLocation="ProduceCreditCheck.wsdl" xmlns="http://platform.integration.oracle/blocks/adapter/fw/metadata">
+  <connection-factory UIConnectionName="LocalWebLogic" location="eis/wls/Queue" adapterRef=""/>
+  <endpoint-interaction portType="Produce_Message_ptt" operation="Produce_Message">
+    <interaction-spec className="oracle.tip.adapter.jms.outbound.JmsProduceInteractionSpec">
+      <property name="DestinationName" value="jms/CreditRequestQueue"/>
+      <property name="DeliveryMode" value="Persistent"/>
+      <property name="PayloadType" value="TextMessage"/>
+    </interaction-spec>
+  </endpoint-interaction>
+</adapter-config>

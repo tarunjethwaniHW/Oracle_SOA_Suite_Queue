@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<composite name="LoanQueueOrchestration"
+           revision="1.0"
+           label="2026-08-19"
+           mode="active"
+           state="on"
+           xmlns="http://xmlns.oracle.com/sca/1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
+           xmlns:orawsp="http://schemas.oracle.com/ws/2006/01/policy"
+           xmlns:ui="http://xmlns.oracle.com/soa/designer/"
+           xmlns:sca-ext="http://xmlns.oracle.com/sca/1.0-ext">
+
+   <import namespace="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest"
+           location="ConsumeLoanRequest.wsdl" importType="wsdl"/>
+   <import namespace="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceCreditCheck"
+           location="ProduceCreditCheck.wsdl" importType="wsdl"/>
+   <import namespace="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeCreditResponse"
+           location="ConsumeCreditResponse.wsdl" importType="wsdl"/>
+   <import namespace="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceLoanResponse"
+           location="ProduceLoanResponse.wsdl" importType="wsdl"/>
+
+   <!-- Inbound JMS Entry Point from Client -->
+   <service name="ConsumeLoanRequest" ui:wsdlLocation="ConsumeLoanRequest.wsdl">
+      <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest#wsdl.interface(Consume_Message_ptt)"/>
+      <binding.jca config="ConsumeLoanRequest_jms.jca"/>
+   </service>
+
+   <!-- BPEL Orchestrator Component -->
+   <component name="LoanQueueOrchestratorBpel" version="2.0">
+      <implementation.bpel src="LoanQueueOrchestratorBpel.bpel"/>
+      <componentType>
+         <service name="ConsumeLoanRequest" ui:wsdlLocation="ConsumeLoanRequest.wsdl">
+            <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest#wsdl.interface(Consume_Message_ptt)"/>
+         </service>
+         <reference name="ProduceCreditCheck" ui:wsdlLocation="ProduceCreditCheck.wsdl">
+            <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceCreditCheck#wsdl.interface(Produce_Message_ptt)"/>
+         </reference>
+         <reference name="ConsumeCreditResponse" ui:wsdlLocation="ConsumeCreditResponse.wsdl">
+            <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeCreditResponse#wsdl.interface(Consume_Message_ptt)"/>
+         </reference>
+         <reference name="ProduceLoanResponse" ui:wsdlLocation="ProduceLoanResponse.wsdl">
+            <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceLoanResponse#wsdl.interface(Produce_Message_ptt)"/>
+         </reference>
+      </componentType>
+   </component>
+
+   <!-- Outbound Reference to Credit Check Request Queue -->
+   <reference name="ProduceCreditCheck" ui:wsdlLocation="ProduceCreditCheck.wsdl">
+      <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceCreditCheck#wsdl.interface(Produce_Message_ptt)"/>
+      <binding.jca config="ProduceCreditCheck_jms.jca"/>
+   </reference>
+
+   <!-- Inbound Reference for Credit Check Response Queue -->
+   <reference name="ConsumeCreditResponse" ui:wsdlLocation="ConsumeCreditResponse.wsdl">
+      <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeCreditResponse#wsdl.interface(Consume_Message_ptt)"/>
+      <binding.jca config="ConsumeCreditResponse_jms.jca"/>
+   </reference>
+
+   <!-- Outbound Reference to Reply to Client Response Queue -->
+   <reference name="ProduceLoanResponse" ui:wsdlLocation="ProduceLoanResponse.wsdl">
+      <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceLoanResponse#wsdl.interface(Produce_Message_ptt)"/>
+      <binding.jca config="ProduceLoanResponse_jms.jca"/>
+   </reference>
+
+   <!-- Wirings -->
+   <wire>
+      <source.uri>ConsumeLoanRequest</source.uri>
+      <target.uri>LoanQueueOrchestratorBpel/ConsumeLoanRequest</target.uri>
+   </wire>
+   <wire>
+      <source.uri>LoanQueueOrchestratorBpel/ProduceCreditCheck</source.uri>
+      <target.uri>ProduceCreditCheck</target.uri>
+   </wire>
+   <wire>
+      <source.uri>LoanQueueOrchestratorBpel/ConsumeCreditResponse</source.uri>
+      <target.uri>ConsumeCreditResponse</target.uri>
+   </wire>
+   <wire>
+      <source.uri>LoanQueueOrchestratorBpel/ProduceLoanResponse</source.uri>
+      <target.uri>ProduceLoanResponse</target.uri>
+   </wire>
+
+</composite>

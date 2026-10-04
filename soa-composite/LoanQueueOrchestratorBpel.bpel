@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<process name="LoanQueueOrchestratorBpel"
+         targetNamespace="http://xmlns.oracle.com/pcbpel/adapter/jms/LoanQueueOrchestratorBpel"
+         xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:client="http://xmlns.oracle.com/pcbpel/adapter/jms/LoanQueueOrchestratorBpel"
+         xmlns:ns1="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest"
+         xmlns:ns2="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceCreditCheck"
+         xmlns:ns3="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeCreditResponse"
+         xmlns:ns4="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceLoanResponse"
+         xmlns:types="http://xmlns.oracle.com/pcbpel/adapter/jms/types"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+         xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable">
+
+  <!-- ================================================================= -->
+  <!-- PARTNERLINKS                                                      -->
+  <!-- ================================================================= -->
+  <partnerLinks>
+    <partnerLink name="ConsumeLoanRequest" partnerLinkType="ns1:Consume_Message_plt" myRole="Consume_Message_role"/>
+    <partnerLink name="ProduceCreditCheck" partnerLinkType="ns2:Produce_Message_plt" partnerRole="Produce_Message_role"/>
+    <partnerLink name="ConsumeCreditResponse" partnerLinkType="ns3:Consume_Message_plt" myRole="Consume_Message_role"/>
+    <partnerLink name="ProduceLoanResponse" partnerLinkType="ns4:Produce_Message_plt" partnerRole="Produce_Message_role"/>
+  </partnerLinks>
+
+  <!-- ================================================================= -->
+  <!-- VARIABLES                                                         -->
+  <!-- ================================================================= -->
+  <variables>
+    <variable name="LoanRequestVar" messageType="ns1:Consume_Message_msg"/>
+    <variable name="CreditRequestVar" messageType="ns2:Produce_Message_msg"/>
+    <variable name="CreditResponseVar" messageType="ns3:Consume_Message_msg"/>
+    <variable name="LoanResponseVar" messageType="ns4:Produce_Message_msg"/>
+  </variables>
+
+  <!-- ================================================================= -->
+  <!-- PROPERTIES & ALIASES FOR CORRELATION                              -->
+  <!-- ================================================================= -->
+  <properties>
+    <property name="transactionId" type="xsd:string"/>
+  </properties>
+
+  <propertyAlias propertyName="client:transactionId" 
+                 messageType="ns1:Consume_Message_msg" part="body" 
+                 query="/types:LoanRequest/types:transactionId"/>
+                 
+  <propertyAlias propertyName="client:transactionId" 
+                 messageType="ns3:Consume_Message_msg" part="body" 
+                 query="/types:CreditResponse/types:transactionId"/>
+
+  <!-- ================================================================= -->
+  <!-- CORRELATION SETS                                                  -->
+  <!-- ================================================================= -->
+  <correlationSets>
+    <correlationSet name="TransactionCorrelation" properties="client:transactionId"/>
+  </correlationSets>
+
+  <!-- ================================================================= -->
+  <!-- ORCHESTRATION LOGIC                                               -->
+  <!-- ================================================================= -->
+  <sequence name="main">
+    
+    <!-- 1. Receive loan request message (Initiates correlation set) -->
+    <receive name="ReceiveLoanRequest" partnerLink="ConsumeLoanRequest" 
+             portType="ns1:Consume_Message_ptt" operation="Consume_Message" 
+             variable="LoanRequestVar" createInstance="yes">
+      <correlations>
+        <correlation set="TransactionCorrelation" initiate="yes"/>
+      </correlations>
+    </receive>
+
+    <!-- 2. Assign values from LoanRequest to CreditRequest -->
+    <assign name="AssignCreditRequest">
+      <copy>
+        <from>$LoanRequestVar.body/types:transactionId</from>
+        <to>$CreditRequestVar.body/types:transactionId</to>
+      </copy>
+      <copy>
+        <from>$LoanRequestVar.body/types:ssn</from>
+        <to>$CreditRequestVar.body/types:ssn</to>
+      </copy>
+      <copy>
+        <from>$LoanRequestVar.body/types:monthlyIncome</from>
+        <to>$CreditRequestVar.body/types:monthlyIncome</to>
+      </copy>
+    </assign>
+
+    <!-- 3. Invoke Credit Check Microservice asynchronously -->
+    <invoke name="InvokeCreditCheck" partnerLink="ProduceCreditCheck" 
+            portType="ns2:Produce_Message_ptt" operation="Produce_Message" 
+            inputVariable="CreditRequestVar"/>
+
+    <!-- 4. Wait for Credit Response matching Correlation Set -->
+    <receive name="ReceiveCreditResponse" partnerLink="ConsumeCreditResponse" 
+             portType="ns3:Consume_Message_ptt" operation="Consume_Message" 
+             variable="CreditResponseVar">
+      <correlations>
+        <correlation set="TransactionCorrelation" initiate="no"/>
+      </correlations>
+    </receive>
+
+    <!-- 5. Evaluate results and prepare final reply -->
+    <assign name="AssignLoanResponse">
+      <copy>
+        <from>$LoanRequestVar.body/types:transactionId</from>
+        <to>$LoanResponseVar.body/types:transactionId</to>
+      </copy>
+      <copy>
+        <from>$LoanRequestVar.body/types:applicantName</from>
+        <to>$LoanResponseVar.body/types:applicantName</to>
+      </copy>
+      <copy>
+        <from>
+          <literal>APPROVED</literal>
+        </from>
+        <to>$LoanResponseVar.body/types:status</to>
+      </copy>
+      <copy>
+        <from>0.045</from>
+        <to>$LoanResponseVar.body/types:interestRate</to>
+      </copy>
+      <copy>
+        <from>$LoanRequestVar.body/types:requestedAmount</from>
+        <to>$LoanResponseVar.body/types:maxApprovedLimit</to>
+      </copy>
+      <copy>
+        <from>concat('Mock credit check passed. Score: ', string($CreditResponseVar.body/types:creditScore))</from>
+        <to>$LoanResponseVar.body/types:remarks</to>
+      </copy>
+    </assign>
+
+    <!-- 6. Publish final response back to client -->
+    <invoke name="ReplyToClient" partnerLink="ProduceLoanResponse" 
+            portType="ns4:Produce_Message_ptt" operation="Produce_Message" 
+            inputVariable="LoanResponseVar"/>
+
+  </sequence>
+</process>

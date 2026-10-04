@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<componentType xmlns="http://xmlns.oracle.com/sca/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:ui="http://xmlns.oracle.com/soa/designer/">
+  <service name="ConsumeLoanRequest" ui:wsdlLocation="ConsumeLoanRequest.wsdl">
+    <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest#wsdl.interface(Consume_Message_ptt)"/>
+  </service>
+  <reference name="ProduceCreditCheck" ui:wsdlLocation="ProduceCreditCheck.wsdl">
+    <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceCreditCheck#wsdl.interface(Produce_Message_ptt)"/>
+  </reference>
+  <reference name="ConsumeCreditResponse" ui:wsdlLocation="ConsumeCreditResponse.wsdl">
+    <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeCreditResponse#wsdl.interface(Consume_Message_ptt)"/>
+  </reference>
+  <reference name="ProduceLoanResponse" ui:wsdlLocation="ProduceLoanResponse.wsdl">
+    <interface.wsdl interface="http://xmlns.oracle.com/pcbpel/adapter/jms/ProduceLoanResponse#wsdl.interface(Produce_Message_ptt)"/>
+  </reference>
+</componentType>

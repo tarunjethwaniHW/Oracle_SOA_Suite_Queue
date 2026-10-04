@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="ConsumeLoanRequest"
+             targetNamespace="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:tns="http://xmlns.oracle.com/pcbpel/adapter/jms/ConsumeLoanRequest"
+             xmlns:plt="http://schemas.xmlsoap.org/ws/2003/05/partner-link/"
+             xmlns:types="http://xmlns.oracle.com/pcbpel/adapter/jms/types">
+
+    <types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema">
+            <import namespace="http://xmlns.oracle.com/pcbpel/adapter/jms/types" schemaLocation="LoanSchemas.xsd"/>
+        </schema>
+    </types>
+
+    <message name="Consume_Message_msg">
+        <part name="body" element="types:LoanRequest"/>
+    </message>
+
+    <portType name="Consume_Message_ptt">
+        <operation name="Consume_Message">
+            <input message="tns:Consume_Message_msg"/>
+        </operation>
+    </portType>
+
+    <plt:partnerLinkType name="Consume_Message_plt">
+        <plt:role name="Consume_Message_role">
+            <plt:portType name="tns:Consume_Message_ptt"/>
+        </plt:role>
+    </plt:partnerLinkType>
+</definitions>

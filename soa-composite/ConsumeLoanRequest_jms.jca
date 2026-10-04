@@ -1,0 +1,10 @@
+<adapter-config name="ConsumeLoanRequest" adapter="jms" wsdlLocation="ConsumeLoanRequest.wsdl" xmlns="http://platform.integration.oracle/blocks/adapter/fw/metadata">
+  <connection-factory UIConnectionName="LocalWebLogic" location="eis/wls/Queue" adapterRef=""/>
+  <endpoint-activation portType="Consume_Message_ptt" operation="Consume_Message">
+    <activation-spec className="oracle.tip.adapter.jms.inbound.JmsConsumeActivationSpec">
+      <property name="DestinationName" value="jms/LoanRequestQueue"/>
+      <property name="UseMessageListener" value="true"/>
+      <property name="PayloadType" value="TextMessage"/>
+    </activation-spec>
+  </endpoint-activation>
+</adapter-config>
